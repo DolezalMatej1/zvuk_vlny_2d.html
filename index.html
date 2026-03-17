@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zvuk a vlnění hladiny</title>
+  <style>
+    :root {
+      --bg: #070b13;
+      --panel: #111827;
+      --text: #eef2ff;
+      --muted: #b8c0d9;
+      --accent: #7dd3fc;
+      --accent2: #fde68a;
+      --border: #263246;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: radial-gradient(circle at top, #0f172a 0%, var(--bg) 60%);
+      color: var(--text);
+    }
+
+    .wrap {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 18px;
+      min-height: 100vh;
+      padding: 18px;
+    }
+
+    .stage {
+      background: #030712;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stage h1 {
+      margin: 0 0 6px;
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+
+    .sub {
+      color: var(--muted);
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+    }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1 / 1;
+      border-radius: 14px;
+      border: 1px solid #1f2937;
+      background: #000;
+      display: block;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.30);
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      color: var(--accent2);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .value {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 6px 0 14px;
+    }
+
+    .btns {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 700;
+      background: #1d4ed8;
+      color: white;
+    }
+
+    button.secondary {
+      background: #334155;
+    }
+
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 0 10px white;
+    }
+
+    ul {
+      margin: 8px 0 0 18px;
+      padding: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    @media (max-width: 980px) {
+      .wrap {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="stage">
+      <h1>Vliv zvuku na vlnění hladiny</h1>
+      <div class="sub">Interaktivní webová simulace: vyšší hlasitost zvětšuje amplitudu vln, vyšší frekvence zahušťuje vlnění.</div>
+      <canvas id="waveCanvas" width="900" height="900"></canvas>
+    </section>
+
+    <aside class="panel">
+      <div class="card">
+        <h2>Ovládání simulace</h2>
+
+        <label for="dbRange">Hlasitost: <span id="dbValue" class="value">60 dB</span></label>
+        <input id="dbRange" type="range" min="20" max="120" step="1" value="60" />
+
+        <label for="freqRange">Frekvence: <span id="freqValue" class="value">2.0 Hz</span></label>
+        <input id="freqRange" type="range" min="0.5" max="8" step="0.1" value="2.0" />
+
+        <label for="modeSelect">Režim</label>
+        <select id="modeSelect" style="width:100%; padding:10px; border-radius:10px; background:#0f172a; color:white; border:1px solid #334155; margin:6px 0 14px;">
+          <option value="one">Jeden zdroj</option>
+          <option value="two">Dva zdroje – interference</option>
+        </select>
+
+        <div class="btns">
+          <button id="pauseBtn">Pauza</button>
+          <button id="resetBtn" class="secondary">Reset</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Legenda</h2>
+        <div class="legend"><span class="dot"></span> zdroj zvuku</div>
+        <ul>
+          <li>červené a žluté oblasti = větší kladná výchylka</li>
+          <li>modré oblasti = záporná výchylka</li>
+          <li>u dvou zdrojů vzniká interference</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Didaktické využití</h2>
+        <ul>
+          <li>šíření vlnění v rovině</li>
+          <li>vliv amplitudy a frekvence</li>
+          <li>interference dvou zdrojů</li>
+          <li>názorná podpora výuky fyziky</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('waveCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const dbRange = document.getElementById('dbRange');
+    const freqRange = document.getElementById('freqRange');
+    const dbValue = document.getElementById('dbValue');
+    const freqValue = document.getElementById('freqValue');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const modeSelect = document.getElementById('modeSelect');
+
+    const W = canvas.width;
+    const H = canvas.height;
+
+    let time = 0;
+    let running = true;
+
+    const scale = 26;
+    const source1 = { x: W / 2 - 120, y: H / 2 };
+    const source2 = { x: W / 2 + 120, y: H / 2 };
+
+    function dbToAmplitude(db) {
+      return 0.18 + ((db - 20) / 100) * 1.4;
+    }
+
+    function colorMap(v) {
+      const x = Math.max(-1, Math.min(1, v));
+      let r, g, b;
+
+      if (x < -0.5) {
+        r = 0;
+        g = Math.round(120 * (x + 1) / 0.5);
+        b = 255;
+      } else if (x < 0) {
+        r = 0;
+        g = 120 + Math.round(135 * (x + 0.5) / 0.5);
+        b = 255 - Math.round(80 * (x + 0.5) / 0.5);
+      } else if (x < 0.5) {
+        r = Math.round(255 * x / 0.5);
+        g = 255;
+        b = 175 - Math.round(175 * x / 0.5);
+      } else {
+        r = 255;
+        g = 255 - Math.round(180 * (x - 0.5) / 0.5);
+        b = 0;
+      }
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function waveValue(px, py, sx, sy, amp, freq, t) {
+      const dx = px - sx;
+      const dy = py - sy;
+      const r = Math.sqrt(dx * dx + dy * dy) / scale;
+      return amp * Math.sin(2 * Math.PI * freq * t - 2.6 * r) / (1 + 0.35 * r);
+    }
+
+    function drawSource(s) {
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, 7, 0, Math.PI * 2);
+      ctx.fillStyle = 'white';
+      ctx.shadowColor = 'white';
+      ctx.shadowBlur = 12;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    function render() {
+      const db = Number(dbRange.value);
+      const freq = Number(freqRange.value);
+      const amp = dbToAmplitude(db);
+      const mode = modeSelect.value;
+
+      dbValue.textContent = `${db} dB`;
+      freqValue.textContent = `${freq.toFixed(1)} Hz`;
+
+      const step = 5;
+      for (let y = 0; y < H; y += step) {
+        for (let x = 0; x < W; x += step) {
+          let z = waveValue(x, y, source1.x, source1.y, amp, freq, time);
+          if (mode === 'two') {
+            z += waveValue(x, y, source2.x, source2.y, amp, freq, time);
+            z *= 0.8;
+          }
+          ctx.fillStyle = colorMap(z);
+          ctx.fillRect(x, y, step, step);
+        }
+      }
+
+      drawSource(source1);
+      if (mode === 'two') drawSource(source2);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      ctx.font = '20px Arial';
+      ctx.fillText(`čas = ${time.toFixed(1)} s`, 20, 32);
+      ctx.fillText(`hlasitost = ${db} dB`, 20, 58);
+      ctx.fillText(`frekvence = ${freq.toFixed(1)} Hz`, 20, 84);
+      ctx.fillText(mode === 'one' ? '1 zdroj' : '2 zdroje – interference', 20, 110);
+    }
+
+    function loop() {
+      if (running) time += 0.035;
+      render();
+      requestAnimationFrame(loop);
+    }
+
+    pauseBtn.addEventListener('click', () => {
+      running = !running;
+      pauseBtn.textContent = running ? 'Pauza' : 'Pokračovat';
+    });
+
+    resetBtn.addEventListener('click', () => {
+      time = 0;
+      running = true;
+      pauseBtn.textContent = 'Pauza';
+    });
+
+    loop();
+  </script>
+</body>
+</html>
